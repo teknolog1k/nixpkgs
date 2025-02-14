@@ -26,14 +26,18 @@ stdenv.mkDerivation (finalAttrs: {
   postPatch = ''
     jq '.tauri.bundle.active = false' src-tauri/tauri.conf.json | sponge src-tauri/tauri.conf.json
     jq '.dependencies += .devDependencies' src-vue/package.json | sponge src-vue/package.json
+    jq '.dependencies += .devDependencies' package.json | sponge package.json
+    jq -s '.[0] * .[1]' package.json src-vue/package.json | sponge package.json
   '';
 
   npmDeps = fetchNpmDeps {
-    name = "src-vue-0.0.0-npm-deps";
-    src = "${finalAttrs.src}/src-vue";
-    hash = "sha256-YuRjWnVt1lGQWycqyLRhnvvAefPvY8JHejS9SajjcsY=";
+    name = "${finalAttrs.pname}-${finalAttrs.version}-npm-deps";
+    inherit (finalAttrs) src;
+    hash = "sha256-Z2HR+BQfMwurLLn8YiLufK13rDXIm5rXdStJdDnfICw=";
     forceGitDeps = true;
   };
+
+  npmFlags = [ "--legacy-peer-deps" ];
 
   cargoDeps = rustPlatform.fetchCargoVendor {
     inherit (finalAttrs)
